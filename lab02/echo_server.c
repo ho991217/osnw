@@ -12,7 +12,10 @@ int main(int argc, char **argv)
 {
 	int server_sockfd, client_sockfd;
 	int client_len, n;
+	int i;
 	char buf[MAXBUF];
+	char str[MAXBUF];
+	str[0] = 0;
 	struct sockaddr_in clientaddr, serveraddr;
 	client_len = sizeof(clientaddr);
 	if ((server_sockfd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP )) == -1)
@@ -39,7 +42,17 @@ int main(int argc, char **argv)
 			close(client_sockfd);
 			continue;
 		}
-		if (write(client_sockfd, buf, MAXBUF) <=0)
+		strcat(str, buf);
+		for (i = 0; str[i] != 0; i++) {
+			if (str[i] == '\n') {
+				str[i] = 0;
+				break;
+			}
+		}
+		// str[i] = '\n';
+		printf("current str: %s", str);
+		// str[i] = buf;
+		if (write(client_sockfd, str, MAXBUF) <=0)
 		{
 			perror("write error : ");
 			close(client_sockfd);
