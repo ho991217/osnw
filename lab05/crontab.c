@@ -2,13 +2,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <string.h>
 
 void main()
 {
 	time_t t;
 	struct tm *tm;
+	char *str;
 
 	t = time(NULL);
 	tm = localtime(&t);
-	printf("starting job by crontab at %s\n", asctime(tm)); 
+	str = asctime(tm);
+	str[strlen(str)-1] = '\0';
+
+	printf("starting job by crontab at %s: 32183741\n", str);
 }

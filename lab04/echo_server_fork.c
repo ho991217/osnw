@@ -13,27 +13,37 @@
 
 int main(int argc, char **argv)
 {
+	int pipe_fd[2];
+
 	int listen_fd, client_fd;
 	pid_t pid;
 	socklen_t addrlen;
 	int readn;
 	char buf[MAXLINE];
+	char answer[MAXLINE] = {0};
 	struct sockaddr_in client_addr, server_addr;
+	int i;
+	if (pipe(pipe_fd) == -1) {
+		perror("Failed to create pipe");
+		return -1;
+	}
 
 	if( (listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		return 1;
 	}
+
 	memset((void *)&server_addr, 0x00, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	server_addr.sin_port = htons(PORTNUM);
 
-	if(bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) ==-1)
+	if(bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
 	{
 		perror("bind error");
 		return 1;
 	}
+
 	if(listen(listen_fd, 5) == -1)
 	{
 		perror("listen error");
@@ -46,30 +56,48 @@ int main(int argc, char **argv)
 		addrlen = sizeof(client_addr);
 		client_fd = accept(listen_fd,
 			(struct sockaddr *)&client_addr, &addrlen);
+
 		if(client_fd == -1)
 		{
 			printf("accept error\n");
 			break;
 		}
 		pid = fork();
+
 		if(pid == 0)
 		{
 			close( listen_fd );
 			memset(buf, 0x00, MAXLINE);
+
 			while((readn = read(client_fd, buf, MAXLINE)) > 0)
 			{
 				printf("Read Data %s(%d) : %s",
 						inet_ntoa(client_addr.sin_addr),
 						client_addr.sin_port,
 						 buf);
-				write(client_fd, buf, strlen(buf));
+				write(pipe_fd[1], buf, strlen(buf));
+
 				memset(buf, 0x00, MAXLINE);
+				break;
 			}
+
 			close(client_fd);
+
 			return 0;
 		}
-		else if( pid > 0)
+
+		else if(pid > 0)
+		{
+			char buffer[MAXLINE];
+
+			read(pipe_fd[0], buffer, strlen(buffer));
+			strcat(answer, buffer);
+			// printf("parent process recieved data: %s", buffer);
+
+			write(client_fd, answer, strlen(answer));
+
 			close(client_fd);
+		}
 	}
 	return 0;
 }
