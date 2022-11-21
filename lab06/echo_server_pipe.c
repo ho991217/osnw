@@ -10,8 +10,9 @@
 #define MAXLINE 1024
 int main(int argc, char **argv)
 {
-	int rfd, wfd;
+	int rfd, wfd, i;
 	char buf[MAXLINE];
+	char result[MAXLINE*3] = {'\0'};
 
 	mkfifo("/tmp/myfifo_r", S_IRUSR|S_IWUSR);
 	mkfifo("/tmp/myfifo_w", S_IRUSR|S_IWUSR);
@@ -27,15 +28,19 @@ int main(int argc, char **argv)
 	}
 	while(1)
 	{
-		memset(buf, 0x00, MAXLINE);
-		if(read(rfd,buf,MAXLINE) < 0)
-		{
-			perror("Read Error");
+		for (i = 0; i < 3; i++) {
+			memset(buf, 0x00, MAXLINE);
+			if(read(rfd,buf,MAXLINE) < 0)
+			{
+				perror("Read Error");
 			return 1;
+			}
+			printf("Read : %s", buf);
+			result[strlen(result) - 1] = '\0';
+			strcat(result, buf);
+			write(wfd, result, MAXLINE);
+			lseek(wfd, 0, SEEK_SET);
 		}
-		printf("Read : %s", buf);
-		write(wfd, buf, MAXLINE);
-		lseek(wfd, 0, SEEK_SET);
 	}
 }
 
