@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
+#define MAXLINE 1024
 
 union semun
 {
@@ -13,6 +16,9 @@ union semun
 
 int main(int argc, char **argv)
 {
+	time_t t = time(NULL);
+	printf("%s\n", ctime(&t));
+
 	int shmid;
 	int semid;
 
@@ -51,6 +57,7 @@ int main(int argc, char **argv)
 
 	while(1)
 	{
+		// cal_num = ctime(&t);
 		int local_var = 0;
 		if(semop(semid, &semopen, 1) == -1)
 		{
